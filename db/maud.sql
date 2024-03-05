@@ -1,21 +1,17 @@
 CREATE TABLE IF NOT EXISTS Accounts (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    nick VARCHAR(256) NOT NULL,
+    nick VARCHAR(64) NOT NULL UNIQUE,
     password VARCHAR(128) NOT NULL,
     authorization_token VARCHAR(128) NOT NULL,
     alive DATE DEFAULT (CURRENT_DATE()),
     PRIMARY KEY (id)
 );
 CREATE TABLE IF NOT EXISTS Switches (
-    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     account_id INT UNSIGNED NOT NULL,
+    id INT UNSIGNED NOT NULL,
     content TEXT NOT NULL,
     run_after INT UNSIGNED NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (account_id) REFERENCES Accounts(id)
-);
-CREATE TABLE IF NOT EXISTS Recipients (
-    email VARCHAR(128),
-    switch_id INT UNSIGNED NOT NULL,
-    FOREIGN KEY (switch_id) REFERENCES Switches(id)
+    recipients TEXT,
+    FOREIGN KEY (account_id) REFERENCES Accounts(id) ON DELETE CASCADE,
+    PRIMARY KEY (account_id, id)
 );
