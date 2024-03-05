@@ -6,6 +6,5 @@ type LoginPOST struct {
 }
 
 type LoginResponse struct {
-	Nick               string `json:"nick"`
 	AuthorizationToken string `json:"authorization_token"`
 }
