@@ -79,7 +79,7 @@ func (db *DB) Authorize(authorization_token string) (bool, *types.RequestError) 
 	return result, nil
 }
 
-func (db *DB) Register(account *types.RegisterPOST) (*types.RegisterResponse, *types.RequestError) {
+func (db *DB) Register(account types.RegisterPOST) (*types.RegisterResponse, *types.RequestError) {
 	var response types.RegisterResponse
 
 	password_hash, err := argon2id.CreateHash(account.Password, argon2id.DefaultParams)
@@ -131,7 +131,7 @@ func (db *DB) Register(account *types.RegisterPOST) (*types.RegisterResponse, *t
 	return &response, nil
 }
 
-func (db *DB) Login(account *types.LoginPOST) (*types.LoginResponse, *types.RequestError) {
+func (db *DB) Login(account types.LoginPOST) (*types.LoginResponse, *types.RequestError) {
 	var response types.LoginResponse
 	var password_hash_db string
 
@@ -162,7 +162,7 @@ func (db *DB) Login(account *types.LoginPOST) (*types.LoginResponse, *types.Requ
 	return &response, nil
 }
 
-func (db *DB) Status(authorization_token *string) (*types.StatusResponse, *types.RequestError) {
+func (db *DB) Status(authorization_token string) (*types.StatusResponse, *types.RequestError) {
 	var result types.StatusResponse
 	err := db.conn.QueryRow("SELECT alive FROM `Accounts` WHERE authorization_token = ?", authorization_token).Scan(&result.Date)
 	if err != nil {
@@ -175,7 +175,7 @@ func (db *DB) Status(authorization_token *string) (*types.StatusResponse, *types
 	return &result, nil
 }
 
-func (db *DB) UpdateAlive(authorization_token *string) (*types.AliveResponse, *types.RequestError) {
+func (db *DB) UpdateAlive(authorization_token string) (*types.AliveResponse, *types.RequestError) {
 	var result types.AliveResponse
 
 	_, err := db.conn.Exec("UPDATE `Accounts` SET alive = CURRENT_DATE() WHERE authorization_token = ?", authorization_token)
@@ -197,7 +197,7 @@ func (db *DB) UpdateAlive(authorization_token *string) (*types.AliveResponse, *t
 	return &result, nil
 }
 
-func (db *DB) AddSwitch(authorization_token *string, switch_body *types.SwitchesPOST) (*types.Switch, *types.RequestError) {
+func (db *DB) AddSwitch(authorization_token string, switch_body types.SwitchesPOST) (*types.Switch, *types.RequestError) {
 	var response *types.Switch
 	var account_id uint
 
@@ -240,7 +240,7 @@ func (db *DB) AddSwitch(authorization_token *string, switch_body *types.Switches
 		}
 	}
 
-	response, rerr := db.getSwitch(switch_id)
+	response, rerr := db.getSwitch(switch_id, authorization_token)
 	if rerr != nil {
 		return nil, rerr
 	}
@@ -251,12 +251,12 @@ func (db *DB) AddSwitch(authorization_token *string, switch_body *types.Switches
 /*
 If switch_id == -1 will return an array of all the switches
 */
-func (db *DB) GetSwitch(authorization_token *string, switch_id int64) (*types.SwitchesResponse, *types.RequestError) {
+func (db *DB) GetSwitch(authorization_token string, switch_id int64) (*types.SwitchesResponse, *types.RequestError) {
 	var response types.SwitchesResponse
 	var switches []int64
 
 	if switch_id == -1 {
-		rows, err := db.conn.Query("select s.id from `Switches` s where s.account_id = (select a.id from `Accounts` a where a.authorization_token = ?)", authorization_token)
+		rows, err := db.conn.Query("SELECT s.id FROM `Switches` s WHERE s.account_id = (SELECT a.id FROM `Accounts` a WHERE a.authorization_token = ?)", authorization_token)
 		if err != nil {
 			return nil, &types.RequestError{
 				StatusCode: http.StatusInternalServerError,
@@ -269,24 +269,31 @@ func (db *DB) GetSwitch(authorization_token *string, switch_id int64) (*types.Sw
 			rows.Scan(&sw)
 			switches = append(switches, sw)
 		}
+		err = rows.Close()
+		if err != nil {
+			return nil, &types.RequestError{
+				StatusCode: http.StatusInternalServerError,
+				Err:        errors.New("failed to close rows"),
+			}
+		}
 	} else {
 		switches = []int64{switch_id}
 	}
 
 	for _, item := range switches {
-		sw, rerr := db.getSwitch(item)
+		sw, rerr := db.getSwitch(item, authorization_token)
 		if rerr != nil {
 			return nil, rerr
 		}
-		response.Switches = append(response.Switches, sw)
+		response.Switches = append(response.Switches, *sw)
 	}
 
 	return &response, nil
 }
 
-func (db *DB) DeleteSwitch(authorization_token *string, switch_id int64) (*types.Switch, *types.RequestError) {
+func (db *DB) DeleteSwitch(authorization_token string, switch_id int64) (*types.Switch, *types.RequestError) {
 	var response *types.Switch
-	response, rerr := db.getSwitch(switch_id)
+	response, rerr := db.getSwitch(switch_id, authorization_token)
 	if rerr != nil {
 		return nil, rerr
 	}
@@ -299,7 +306,7 @@ func (db *DB) DeleteSwitch(authorization_token *string, switch_id int64) (*types
 		}
 	}
 
-	_, rerr = db.getSwitch(switch_id)
+	_, rerr = db.getSwitch(switch_id, authorization_token)
 	if rerr.Error() != "switch not found" {
 		return nil, &types.RequestError{
 			StatusCode: http.StatusInternalServerError,
@@ -310,10 +317,10 @@ func (db *DB) DeleteSwitch(authorization_token *string, switch_id int64) (*types
 	return response, nil
 }
 
-func (db *DB) UpdateSwitch(authorization_token *string, switch_id int64, switch_body *types.SwitchesPATCH) (*types.Switch, *types.RequestError) {
+func (db *DB) UpdateSwitch(authorization_token string, switch_id int64, switch_body types.SwitchesPATCH) (*types.Switch, *types.RequestError) {
 	var response *types.Switch
 
-	old_switch, rerr := db.getSwitch(switch_id)
+	old_switch, rerr := db.getSwitch(switch_id, authorization_token)
 	if rerr != nil {
 		return nil, rerr
 	}
@@ -351,6 +358,6 @@ func (db *DB) UpdateSwitch(authorization_token *string, switch_id int64, switch_
 		}
 	}
 
-	response, rerr = db.getSwitch(switch_id)
+	response, rerr = db.getSwitch(switch_id, authorization_token)
 	return response, rerr
 }

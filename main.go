@@ -27,7 +27,7 @@ func (ctx *maud_context) registerPOST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, rerr := ctx.db.Register(&account)
+	response, rerr := ctx.db.Register(account)
 	if rerr != nil {
 		w.WriteHeader(rerr.StatusCode)
 		w.Write([]byte(rerr.Error()))
@@ -57,7 +57,7 @@ func (ctx *maud_context) loginPOST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, rerr := ctx.db.Login(&account)
+	response, rerr := ctx.db.Login(account)
 	if rerr != nil {
 		http.Error(w, rerr.Error(), rerr.StatusCode)
 		log.Println("Failed login attempt from", r.RemoteAddr)
@@ -77,7 +77,7 @@ func (ctx *maud_context) loginPOST(w http.ResponseWriter, r *http.Request) {
 
 func (ctx *maud_context) statusGET(w http.ResponseWriter, r *http.Request) {
 	authorization := r.Header.Get("authorization")
-	response, rerr := ctx.db.Status(&authorization)
+	response, rerr := ctx.db.Status(authorization)
 	if rerr != nil {
 		http.Error(w, rerr.Error(), rerr.StatusCode)
 		return
@@ -95,7 +95,7 @@ func (ctx *maud_context) statusGET(w http.ResponseWriter, r *http.Request) {
 
 func (ctx *maud_context) alivePOST(w http.ResponseWriter, r *http.Request) {
 	authorization := r.Header.Get("authorization")
-	response, rerr := ctx.db.UpdateAlive(&authorization)
+	response, rerr := ctx.db.UpdateAlive(authorization)
 	if rerr != nil {
 		http.Error(w, rerr.Error(), rerr.StatusCode)
 		return
@@ -122,7 +122,7 @@ func (ctx *maud_context) switchesPOST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, rerr := ctx.db.AddSwitch(&authorization, &switch_body)
+	response, rerr := ctx.db.AddSwitch(authorization, switch_body)
 	if rerr != nil {
 		http.Error(w, rerr.Error(), rerr.StatusCode)
 		return
@@ -152,7 +152,7 @@ func (ctx *maud_context) switchesGET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, rerr := ctx.db.GetSwitch(&authorization, int64(id))
+	response, rerr := ctx.db.GetSwitch(authorization, int64(id))
 	if rerr != nil {
 		http.Error(w, rerr.Error(), rerr.StatusCode)
 		return
@@ -179,7 +179,7 @@ func (ctx *maud_context) switchesDELETE(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	response, rerr := ctx.db.DeleteSwitch(&authorization, int64(id))
+	response, rerr := ctx.db.DeleteSwitch(authorization, int64(id))
 	if rerr != nil {
 		http.Error(w, rerr.Error(), rerr.StatusCode)
 		return
@@ -214,7 +214,7 @@ func (ctx *maud_context) switchesPATCH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, rerr := ctx.db.UpdateSwitch(&authorization, int64(id), &switch_body)
+	response, rerr := ctx.db.UpdateSwitch(authorization, int64(id), switch_body)
 	if rerr != nil {
 		http.Error(w, rerr.Error(), rerr.StatusCode)
 		return
@@ -233,7 +233,7 @@ func (ctx *maud_context) switchesPATCH(w http.ResponseWriter, r *http.Request) {
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	db, err := db.InitDatabase("anon@/", "maud")
+	db, err := db.InitDatabase("anon@/maud", "maud")
 	if err != nil {
 		log.Fatalf("Failed to initialise the database: %v\n", err)
 	}
@@ -255,6 +255,8 @@ func main() {
 		w.WriteHeader(http.StatusTeapot)
 		w.Write([]byte("I run on a teapot."))
 	})
+
+	go ctx.watchdog()
 
 	log.Fatalln(http.ListenAndServe(":1337", nil))
 }
