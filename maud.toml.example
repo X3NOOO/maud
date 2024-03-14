@@ -1,3 +1,6 @@
+[maud]
+port = 1337
+
 [database]
 dns = "anon@/maud"
 

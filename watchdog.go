@@ -18,12 +18,12 @@ func (ctx *maud_context) init_runners() []runners.Runner {
 			File: logfile,
 		},
 
-		// runners.Email{
-		// Host:     ctx.config.Runners.Email.Host,
-		// Port:     ctx.config.Runners.Email.Port,
-		// Email:    ctx.config.Runners.Email.Email,
-		// Password: ctx.config.Runners.Email.Password,
-		// },
+		runners.Email{
+			Host:     ctx.config.Runners.Email.Host,
+			Port:     ctx.config.Runners.Email.Port,
+			Email:    ctx.config.Runners.Email.Email,
+			Password: ctx.config.Runners.Email.Password,
+		},
 	}
 }
 

@@ -284,5 +284,5 @@ func main() {
 
 	go ctx.watchdog()
 
-	log.Fatalln(http.ListenAndServe(":1337", nil))
+	log.Fatalln(http.ListenAndServe(":"+strconv.Itoa(ctx.config.Maud.Port), nil))
 }

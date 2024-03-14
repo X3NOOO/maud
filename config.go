@@ -7,6 +7,9 @@ import (
 )
 
 type Config struct {
+	Maud struct {
+		Port int
+	} `toml:"port"`
 	Database struct {
 		DSN string `toml:"dsn"`
 	} `toml:"database"`
