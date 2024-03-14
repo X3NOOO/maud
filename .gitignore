@@ -23,3 +23,5 @@ go.work
 .air.toml
 tmp/
 notes.txt
+maud.toml
+maud.log

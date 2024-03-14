@@ -1,0 +1,11 @@
+[database]
+dns = "anon@/maud"
+
+[runners]
+[runners.logging]
+file = "/dev/stdout"
+[runners.email]
+host = "example.org"
+port = 587
+email = "user@example.org"
+password = "example_password"

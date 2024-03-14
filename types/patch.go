@@ -5,4 +5,5 @@ type SwitchesPATCH struct {
 	Run_after  uint     `json:"run_after,omitempty"`
 	Recipients []string `json:"recipients,omitempty"`
 	Content    string   `json:"content,omitempty"`
+	Subject    string   `json:"subject,omitempty"`
 }

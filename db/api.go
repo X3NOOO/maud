@@ -9,17 +9,12 @@ import (
 	"strings"
 	"time"
 
-	_ "embed"
-
 	"github.com/alexedwards/argon2id"
 	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/X3NOOO/maud/crypto"
 	"github.com/X3NOOO/maud/types"
 )
-
-//go:embed maud.sql
-var SQL_INIT string
 
 type DB struct {
 	conn *sql.DB
@@ -28,7 +23,7 @@ type DB struct {
 /*
 Initialises the database connection.
 */
-func InitDatabase(dsn string, database_name string) (*DB, error) {
+func InitDatabase(dsn string) (*DB, error) {
 	var db DB
 	conn, err := sql.Open("mysql", dsn)
 	if err != nil {
@@ -37,26 +32,6 @@ func InitDatabase(dsn string, database_name string) (*DB, error) {
 	conn.SetConnMaxLifetime(time.Minute * 3)
 	conn.SetMaxOpenConns(10)
 	conn.SetMaxIdleConns(10)
-
-	_, err = conn.Exec("CREATE DATABASE IF NOT EXISTS " + database_name)
-	if err != nil {
-		return nil, err
-	}
-	_, err = conn.Exec("USE " + database_name)
-	if err != nil {
-		return nil, err
-	}
-
-	// workaround over not using multiple statements in one exec
-	for _, s := range strings.Split(SQL_INIT, ";") {
-		if strings.TrimSpace(s) == "" {
-			continue
-		}
-		_, err = conn.Exec(s + ";")
-		if err != nil {
-			return nil, err
-		}
-	}
 
 	db.conn = conn
 	return &db, nil
@@ -100,7 +75,7 @@ func (db *DB) Register(account types.RegisterPOST) (*types.RegisterResponse, *ty
 
 	insert, err := db.conn.Exec("INSERT INTO `Accounts` (nick, `password`, authorization_token) VALUES (?, ?, ?)", account.Nick, password_hash, authorization_token)
 	if err != nil {
-		if strings.HasPrefix(err.Error(), "Error 1062") {
+		if strings.HasPrefix(err.Error(), "Error 1062 ") {
 			return &response, &types.RequestError{
 				StatusCode: http.StatusInternalServerError,
 				Err:        errors.New("this account already exists"),
@@ -232,11 +207,11 @@ func (db *DB) AddSwitch(authorization_token string, switch_body types.SwitchesPO
 	}
 	switch_id++
 
-	_, err = db.conn.Exec("INSERT INTO `Switches` (account_id, id, content, run_after, recipients) VALUES (?, ?, ?, ?, ?)", account_id, switch_id, switch_body.Content, switch_body.Run_after, string(recipients_json))
+	_, err = db.conn.Exec("INSERT INTO `Switches` (account_id, id, content, subject, run_after, recipients) VALUES (?, ?, ?, ?, ?, ?)", account_id, switch_id, switch_body.Content, switch_body.Subject, switch_body.Run_after, string(recipients_json))
 	if err != nil {
 		return nil, &types.RequestError{
 			StatusCode: http.StatusInternalServerError,
-			Err:        errors.New("failed create switch"),
+			Err:        errors.New("failed to create switch"),
 		}
 	}
 
@@ -350,7 +325,7 @@ func (db *DB) UpdateSwitch(authorization_token string, switch_id int64, switch_b
 		}
 	}
 
-	_, err = db.conn.Exec("UPDATE `Switches` SET content = ?, run_after = ?, recipients = ? WHERE id = ? AND account_id = (SELECT id from `Accounts` WHERE authorization_token = ?)", new_switch.Content, new_switch.Run_after, new_recipients_json, switch_id, authorization_token)
+	_, err = db.conn.Exec("UPDATE `Switches` SET content = ?, subject = ?, run_after = ?, recipients = ? WHERE id = ? AND account_id = (SELECT id from `Accounts` WHERE authorization_token = ?)", new_switch.Content, new_switch.Subject, new_switch.Run_after, new_recipients_json, switch_id, authorization_token)
 	if err != nil {
 		return nil, &types.RequestError{
 			StatusCode: http.StatusInternalServerError,
