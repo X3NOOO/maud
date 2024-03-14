@@ -19,4 +19,3 @@ COPY --from=builder /src/out/* .
 COPY --from=builder /src/maud.toml .
 
 ENTRYPOINT ["/maud/maud", "--config", "/maud/maud.toml"]
-# ENTRYPOINT ["/bin/bash"]
