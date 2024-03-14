@@ -13,7 +13,7 @@ import (
 func (db *DB) getSwitch(switch_id int64, authorization_token string) (*types.Switch, *types.RequestError) {
 	var response types.Switch
 	var recipients_json string
-	err := db.conn.QueryRow("SELECT account_id, content, run_after, recipients FROM `Switches` WHERE id = ? AND account_id = (SELECT a.id FROM `Accounts` a WHERE a.authorization_token = ?)", switch_id, authorization_token).Scan(&response.AccountId, &response.Content, &response.Run_after, &recipients_json)
+	err := db.conn.QueryRow("SELECT account_id, content, subject, run_after, recipients FROM `Switches` WHERE id = ? AND account_id = (SELECT a.id FROM `Accounts` a WHERE a.authorization_token = ?)", switch_id, authorization_token).Scan(&response.AccountId, &response.Content, &response.Subject, &response.Run_after, &recipients_json)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, &types.RequestError{

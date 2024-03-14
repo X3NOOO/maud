@@ -2,18 +2,34 @@ package main
 
 import (
 	"log"
+	"os"
 	"time"
 
-	"github.com/X3NOOO/maud/runner"
+	"github.com/X3NOOO/maud/runners"
 )
 
-func init_runners() []runner.Runner {
-	return []runner.Runner{runner.Stdout{}, runner.Email{}}
+func (ctx *maud_context) init_runners() []runners.Runner {
+	logfile, err := os.OpenFile(ctx.config.Runners.Logging.File, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic("failed to open logfile")
+	}
+	return []runners.Runner{
+		runners.Logging{
+			File: logfile,
+		},
+
+		// runners.Email{
+		// Host:     ctx.config.Runners.Email.Host,
+		// Port:     ctx.config.Runners.Email.Port,
+		// Email:    ctx.config.Runners.Email.Email,
+		// Password: ctx.config.Runners.Email.Password,
+		// },
+	}
 }
 
 func (ctx *maud_context) watchdog() {
-	runners := init_runners()
-	ticker := time.NewTicker(1 * time.Second)
+	runners := ctx.init_runners()
+	ticker := time.NewTicker(24 * time.Hour)
 	for {
 		<-ticker.C
 		switches, err := ctx.db.GetSwitchesToFire()
@@ -30,7 +46,5 @@ func (ctx *maud_context) watchdog() {
 				})()
 			}
 		}
-
-		return
 	}
 }

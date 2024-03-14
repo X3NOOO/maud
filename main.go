@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/X3NOOO/maud/db"
@@ -14,6 +16,7 @@ const CONFIG_FILE string = "./maud.toml"
 
 type maud_context struct {
 	db *db.DB
+	config *Config
 }
 
 func (ctx *maud_context) registerPOST(w http.ResponseWriter, r *http.Request) {
@@ -230,15 +233,38 @@ func (ctx *maud_context) switchesPATCH(w http.ResponseWriter, r *http.Request) {
 	w.Write(response_json)
 }
 
+var flagConfig string
+
+func init() {
+	flag.StringVar(&flagConfig, "config", "", "Path to the configuration file")
+}
+
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	flag.Parse()
 
-	db, err := db.InitDatabase("anon@/maud", "maud")
+    ucdir, err := os.UserConfigDir()
+    if err != nil {
+        log.Fatalln(err)
+    }
+
+    cpaths := []string{"./maud.toml", "/etc/maud/maud.toml", ucdir + "/maud.toml"}
+
+	if flagConfig != "" {
+        cpaths = []string{flagConfig}
+    }
+
+    c, err := GetConfig(cpaths)
+    if err != nil {
+        log.Fatalln(err)
+    }
+
+	ctx := maud_context{}
+	ctx.config = c
+	db, err := db.InitDatabase(ctx.config.Database.DSN)
 	if err != nil {
 		log.Fatalf("Failed to initialise the database: %v\n", err)
 	}
-
-	ctx := maud_context{}
 	ctx.db = db
 	defer ctx.db.Close()
 
