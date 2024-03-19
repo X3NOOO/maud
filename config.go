@@ -8,8 +8,8 @@ import (
 
 type Config struct {
 	Maud struct {
-		Port int
-	} `toml:"port"`
+		Port int `toml:"port"`
+	} `toml:"maud"`
 	Database struct {
 		DSN string `toml:"dsn"`
 	} `toml:"database"`
@@ -58,6 +58,10 @@ func GetConfig(paths []string) (*Config, error) {
 		}
 
 		break
+	}
+
+	if dsn := os.Getenv("MAUD_DB_DSN"); dsn != "" {
+		config.Database.DSN = dsn
 	}
 
 	if config == nil {

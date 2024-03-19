@@ -1,8 +1,8 @@
 [maud]
-port = 1337
+port = 1337 # if you're using docker you should change the port in the compose.yml, not here
 
 [database]
-dns = "anon@/maud"
+dns = "root@/maud"
 
 [runners]
 [runners.logging]

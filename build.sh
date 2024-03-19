@@ -1,5 +1,5 @@
 #!/bin/sh
-set -xe
+set -e
 
 OUT=out
 PKG=github.com/X3NOOO/maud

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -281,6 +282,12 @@ func main() {
 		w.WriteHeader(http.StatusTeapot)
 		w.Write([]byte("I run on a teapot."))
 	})
+
+	fmt.Println(`                      __
+  __ _  ___ ___ _____/ /
+ /  ' \/ _ `+"`"+`/ // / _  /
+/_/_/_/\_,_/\_,_/\_,_/
+Starting on port ` + strconv.Itoa(ctx.config.Maud.Port) + "...")
 
 	go ctx.watchdog()
 

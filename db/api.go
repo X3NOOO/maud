@@ -9,12 +9,17 @@ import (
 	"strings"
 	"time"
 
+	_ "embed"
+
 	"github.com/alexedwards/argon2id"
 	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/X3NOOO/maud/crypto"
 	"github.com/X3NOOO/maud/types"
 )
+
+//go:embed maud.sql
+var SQL_INIT string
 
 type DB struct {
 	conn *sql.DB
@@ -29,9 +34,23 @@ func InitDatabase(dsn string) (*DB, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := conn.Ping(); err != nil {
+		return nil, err
+	}
 	conn.SetConnMaxLifetime(time.Minute * 3)
 	conn.SetMaxOpenConns(10)
 	conn.SetMaxIdleConns(10)
+
+	// workaround over not using multiple statements in one exec
+	for _, s := range strings.Split(SQL_INIT, ";") {
+		if strings.TrimSpace(s) == "" {
+			continue
+		}
+		_, err = conn.Exec(s + ";")
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	db.conn = conn
 	return &db, nil

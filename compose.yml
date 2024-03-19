@@ -1,0 +1,37 @@
+services:
+  maud:
+    build: .
+    restart: unless-stopped
+    ports:
+      - 1337:1337
+    environment:
+      - MAUD_DB_DSN=root@tcp(db)/maud
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: mariadb
+    restart: unless-stopped
+    volumes:
+      - data:/var/lib/mysql
+    environment:
+      - MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1
+      - MARIADB_DATABASE=maud
+    expose:
+      - 3306
+    healthcheck:
+      interval: 10s
+      retries: 10
+      test:
+        [
+          "CMD",
+          "healthcheck.sh",
+          "--su-mysql",
+          "--connect",
+          "--innodb_initialized"
+        ]
+      timeout: 30s
+
+volumes:
+  data:
+    external: false
