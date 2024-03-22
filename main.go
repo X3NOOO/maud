@@ -16,7 +16,7 @@ import (
 const CONFIG_FILE string = "./maud.toml"
 
 type maud_context struct {
-	db *db.DB
+	db     *db.DB
 	config *Config
 }
 
@@ -244,21 +244,21 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	flag.Parse()
 
-    ucdir, err := os.UserConfigDir()
-    if err != nil {
-        log.Fatalln(err)
-    }
+	ucdir, err := os.UserConfigDir()
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-    cpaths := []string{"./maud.toml", "/etc/maud/maud.toml", ucdir + "/maud.toml"}
+	cpaths := []string{"./maud.toml", "/etc/maud/maud.toml", ucdir + "/maud.toml"}
 
 	if flagConfig != "" {
-        cpaths = []string{flagConfig}
-    }
+		cpaths = []string{flagConfig}
+	}
 
-    c, err := GetConfig(cpaths)
-    if err != nil {
-        log.Fatalln(err)
-    }
+	c, err := GetConfig(cpaths)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	ctx := maud_context{}
 	ctx.config = c
@@ -269,23 +269,24 @@ func main() {
 	ctx.db = db
 	defer ctx.db.Close()
 
-	http.Handle("POST /register", jsonMiddleware(http.HandlerFunc(ctx.registerPOST)))
-	http.Handle("POST /login", jsonMiddleware(http.HandlerFunc(ctx.loginPOST)))
-	http.Handle("GET /status", ctx.authorizationMiddleware(http.HandlerFunc(ctx.statusGET)))
-	http.Handle("POST /alive", ctx.authorizationMiddleware(http.HandlerFunc(ctx.alivePOST)))
-	http.Handle("POST /switches", jsonMiddleware(ctx.authorizationMiddleware(http.HandlerFunc(ctx.switchesPOST))))
-	http.Handle("GET /switches/{id...}", ctx.authorizationMiddleware(http.HandlerFunc(ctx.switchesGET)))
-	http.Handle("DELETE /switches/{id...}", ctx.authorizationMiddleware(http.HandlerFunc(ctx.switchesDELETE)))
-	http.Handle("PATCH /switches/{id...}", ctx.authorizationMiddleware(http.HandlerFunc(ctx.switchesPATCH)))
+	http.Handle("POST /register", ctx.corsMiddleware(jsonMiddleware(http.HandlerFunc(ctx.registerPOST))))
+	http.Handle("POST /login", ctx.corsMiddleware(jsonMiddleware(http.HandlerFunc(ctx.loginPOST))))
+	http.Handle("GET /status", ctx.corsMiddleware(ctx.authorizationMiddleware(http.HandlerFunc(ctx.statusGET))))
+	http.Handle("POST /alive", ctx.corsMiddleware(ctx.authorizationMiddleware(http.HandlerFunc(ctx.alivePOST))))
+	http.Handle("POST /switches", ctx.corsMiddleware(jsonMiddleware(ctx.authorizationMiddleware(http.HandlerFunc(ctx.switchesPOST)))))
+	http.Handle("GET /switches/{id...}", ctx.corsMiddleware(ctx.authorizationMiddleware(http.HandlerFunc(ctx.switchesGET))))
+	http.Handle("DELETE /switches/{id...}", ctx.corsMiddleware(ctx.authorizationMiddleware(http.HandlerFunc(ctx.switchesDELETE))))
+	http.Handle("PATCH /switches/{id...}", ctx.corsMiddleware(ctx.authorizationMiddleware(http.HandlerFunc(ctx.switchesPATCH))))
+	http.Handle("OPTIONS /", ctx.corsMiddleware(optionsHandler()))
 
-	http.HandleFunc("/tea", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("GET /tea", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusTeapot)
 		w.Write([]byte("I run on a teapot."))
 	})
 
 	fmt.Println(`                      __
   __ _  ___ ___ _____/ /
- /  ' \/ _ `+"`"+`/ // / _  /
+ /  ' \/ _ ` + "`" + `/ // / _  /
 /_/_/_/\_,_/\_,_/\_,_/
 Starting on port ` + strconv.Itoa(ctx.config.Maud.Port) + "...")
 
