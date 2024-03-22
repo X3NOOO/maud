@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"mime"
 	"net/http"
 )
@@ -14,7 +15,7 @@ func optionsHandler() http.Handler {
 func (ctx *maud_context) corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Access-Control-Allow-Origin", ctx.config.Maud.ACAO)
-		w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Add("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
 		next.ServeHTTP(w, r)
 	})
@@ -49,8 +50,16 @@ func (ctx *maud_context) authorizationMiddleware(next http.Handler) http.Handler
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authorization := r.Header.Get("authorization")
 		if authorization == "" {
-			http.Error(w, "authorization not provided", http.StatusUnauthorized)
-			return
+			authorization_cookie, err := r.Cookie("Authorization")
+			if err == http.ErrNoCookie {
+				http.Error(w, "authorization not provided", http.StatusUnauthorized)
+				return
+			} else if err != nil {
+				log.Println("error while authorizing:", err)
+				return
+			}
+			r.Header.Add("authorization", authorization_cookie.Value) // todo: other functions depend on this header
+			authorization = authorization_cookie.Value
 		}
 
 		ok, rerr := ctx.db.Authorize(authorization)

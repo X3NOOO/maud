@@ -39,22 +39,22 @@ Endpoints:
   `"authorization_token"`
 
 #### `GET /status`
+- Required headers/cookies: `Authorization`<sub>Your authorization token</sub>
 - Response fields:
   `"date"` - last activity date
 
 #### `POST /alive`
-- Request fields:
-  `"nick"`
+- Required headers/cookies: `Authorization`<sub>Your authorization token</sub>
 - Response fields:
   `"date"` - last activity date
 
 #### `POST /switches`
+- Required headers/cookies: `Authorization`<sub>Your authorization token</sub>
 - Request fields:
   `"run_after"` - after how many days of inactivity fire the switch
   `"recipients"` - array of emails that will recieve the email
   `"content"` - content of the email
   `"subject"` - subject of the email
-
 - Response fields:
   `"id"` - id of the switch
   `"subject"`
@@ -63,9 +63,9 @@ Endpoints:
   `"recipients"`
 
 #### `GET /switches/{id...}`
+- Required headers/cookies: `Authorization`<sub>Your authorization token</sub>
 - URL variables:
   `{id...}`<sub>(optional)</sub> - id of the switch to get, if not provided all of the existing switches will be displayed
-
 - Response fields:
   - Array of:
     `"id"`
@@ -75,6 +75,7 @@ Endpoints:
     `"recipients"`
 
 #### `DELETE /switches/{id...}`
+- Required headers/cookies: `Authorization`<sub>Your authorization token</sub>
 - URL variables:
   `{id...}`<sub>(required)</sub> - id of the switch to delete
 - Response fields:
@@ -85,6 +86,7 @@ Endpoints:
   `"recipients"`
 
 #### `PATCH /switches/{id...}`
+- Required headers/cookies: `Authorization`<sub>Your authorization token</sub>
 - URL variables:
   `{id...}`<sub>(required)</sub> - id of the switch to modify
 - Request fields:
@@ -92,7 +94,6 @@ Endpoints:
   `"content"`<sub>(optional, only modified if provided)</sub>
   `"run_after"`<sub>(optional, only modified if provided)</sub>
   `"recipients"`<sub>(optional, only modified if provided)</sub>
-
 - Response fields:
   `"id"`
   `"subject"`
