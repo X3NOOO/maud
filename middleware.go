@@ -5,6 +5,21 @@ import (
 	"net/http"
 )
 
+func optionsHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+}
+
+func (ctx *maud_context) corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", ctx.config.Maud.ACAO)
+		w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func jsonMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json; charset=utf-8")
@@ -37,7 +52,7 @@ func (ctx *maud_context) authorizationMiddleware(next http.Handler) http.Handler
 			http.Error(w, "authorization not provided", http.StatusUnauthorized)
 			return
 		}
-		
+
 		ok, rerr := ctx.db.Authorize(authorization)
 		if rerr != nil {
 			http.Error(w, rerr.Err.Error(), rerr.StatusCode)
@@ -47,7 +62,7 @@ func (ctx *maud_context) authorizationMiddleware(next http.Handler) http.Handler
 			http.Error(w, "invalid authorization token", http.StatusUnauthorized)
 			return
 		}
-		
+
 		next.ServeHTTP(w, r)
 	})
 }
