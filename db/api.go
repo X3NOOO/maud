@@ -160,6 +160,7 @@ func (db *DB) Status(authorization_token string) (*types.StatusResponse, *types.
 	var result types.StatusResponse
 	err := db.conn.QueryRow("SELECT alive FROM `Accounts` WHERE authorization_token = ?", authorization_token).Scan(&result.Date)
 	if err != nil {
+		log.Println(err)
 		return nil, &types.RequestError{
 			StatusCode: http.StatusInternalServerError,
 			Err:        errors.New("failed to get status from the database"),
