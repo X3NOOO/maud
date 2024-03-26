@@ -1,6 +1,6 @@
 [maud]
 port = 1337 # if you're using docker you should change the port in the compose.yml, not here
-acao = "*" # Access-Control-Allow-Origin header, use * to allow all origins
+acao = "yourdomain" # Access-Control-Allow-Origin header, use * to allow all origins
 
 [database]
 dns = "root@/maud"

@@ -19,7 +19,7 @@ Dead man's switch.
 
 ### API
 
-All requests should be JSON-formatted and contain Content-Type header.
+All requests should be JSON-formatted and contain the Content-Type header.
 
 Endpoints:
 
@@ -30,6 +30,8 @@ Endpoints:
 - Response fields:
   `"nick"`
   `"authorization_token"`
+- Cookies set:
+- `Authorization`
 
 #### `POST /login`
 - Request fields:
@@ -37,10 +39,13 @@ Endpoints:
   `"password"`
 - Response fields:
   `"authorization_token"`
+- Cookies set:
+- `Authorization`
 
 #### `GET /status`
 - Required headers/cookies: `Authorization`<sub>Your authorization token</sub>
 - Response fields:
+  `"nick"` - username
   `"date"` - last activity date
 
 #### `POST /alive`
@@ -65,7 +70,7 @@ Endpoints:
 #### `GET /switches/{id...}`
 - Required headers/cookies: `Authorization`<sub>Your authorization token</sub>
 - URL variables:
-  `{id...}`<sub>(optional)</sub> - id of the switch to get, if not provided all of the existing switches will be displayed
+  `{id...}`<sub>(optional)</sub> - id of the switch to get, if not provided all of the existing switches will be returned
 - Response fields:
   - Array of:
     `"id"`

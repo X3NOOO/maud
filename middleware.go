@@ -16,6 +16,7 @@ func (ctx *maud_context) corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Access-Control-Allow-Origin", ctx.config.Maud.ACAO)
 		w.Header().Add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Add("Access-Control-Allow-Credentials", "true")
 
 		next.ServeHTTP(w, r)
 	})

@@ -158,7 +158,7 @@ func (db *DB) Login(account types.LoginPOST) (*types.LoginResponse, *types.Reque
 
 func (db *DB) Status(authorization_token string) (*types.StatusResponse, *types.RequestError) {
 	var result types.StatusResponse
-	err := db.conn.QueryRow("SELECT alive FROM `Accounts` WHERE authorization_token = ?", authorization_token).Scan(&result.Date)
+	err := db.conn.QueryRow("SELECT nick, alive FROM `Accounts` WHERE authorization_token = ?", authorization_token).Scan(&result.Nick, &result.Date)
 	if err != nil {
 		log.Println(err)
 		return nil, &types.RequestError{
