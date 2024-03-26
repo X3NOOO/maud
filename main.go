@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/X3NOOO/maud/db"
 	"github.com/X3NOOO/maud/types"
@@ -47,6 +48,16 @@ func (ctx *maud_context) registerPOST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	http.SetCookie(w, &http.Cookie{
+		Name:     "Authorization",
+		Value:    response.AuthorizationToken,
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+		Expires:  time.Now().AddDate(1, 0, 0),
+		MaxAge:   0,
+	})
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(response_json)
 }
@@ -74,6 +85,16 @@ func (ctx *maud_context) loginPOST(w http.ResponseWriter, r *http.Request) {
 		log.Println("Failed login attempt from", r.RemoteAddr)
 		return
 	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "Authorization",
+		Value:    response.AuthorizationToken,
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+		Expires:  time.Now().AddDate(1, 0, 0),
+		MaxAge:   0,
+	})
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(response_json)
@@ -281,7 +302,13 @@ func main() {
 
 	http.HandleFunc("GET /tea", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusTeapot)
-		w.Write([]byte("I run on a teapot."))
+		w.Write([]byte(`             ;,'
+     _o_    ;:;'
+ ,-.'---'.__ ;
+((j'=====',-'
+ '-\     /
+    '-=-'     hjw
+`))
 	})
 
 	fmt.Println(`                      __
